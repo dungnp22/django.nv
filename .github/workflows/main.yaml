@@ -22,6 +22,19 @@ jobs:
           source env/bin/activate
           pip install -r requirements.txt
           python manage.py check
+  zap_baseline:
+    runs-on: ubuntu-20.04
+    needs: test
+    steps:
+      - run: |
+           docker pull owasp/zap2docker-stable:2.10.0
+           docker run --user root --rm -v $(pwd):/zap/wrk:rw -w /zap owasp/zap2docker-stable:2.10.0 zap-baseline.py -t ${{ secrets.PROD_URL }} -J zap-output.json
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ZAP Scan
+          path: zap-output.json
+        if: always()        # what is this for?
 
   test:
     runs-on: ubuntu-20.04
